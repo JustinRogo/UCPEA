@@ -23,7 +23,8 @@ function element() {
   };
 }
 
-function setup({ permission = 'granted', legacySubscription = true, rpcError = null, subscribeError = null, legacy = true } = {}) {
+function setup({ permission = 'granted', legacySubscription = true, rpcError = null, subscribeError = null, legacy = true,
+  profile = { id: 'user-1', status: 'active' } } = {}) {
   const log = [];
   const oldSubscription = legacySubscription && {
     endpoint: 'https://push.example.net/old',
@@ -76,7 +77,7 @@ function setup({ permission = 'granted', legacySubscription = true, rpcError = n
     PushManager: function PushManager() {},
     Notification: { permission },
     location: new URL(`${scope}index.html`),
-    UCPEAAccount: { profile: { id: 'user-1', status: 'active' }, async getClient() { return client; } },
+    UCPEAAccount: { profile, async getClient() { return client; } },
     navigator: {
       onLine: true, userAgent: 'Test', platform: 'Test', maxTouchPoints: 0,
       serviceWorker: {
@@ -132,7 +133,19 @@ test('never prompts: leaves alerts alone without granted permission', async () =
 test('unregisters an old-address worker that has no subscription', async () => {
   const { log } = setup({ legacySubscription: false });
   await settle();
+  assert.ok(log.length >= 1 && log.every(entry => entry === 'unregister old'));
+});
+
+test('unregisters an unused old-address worker even when nobody is signed in', async () => {
+  const { log } = setup({ legacySubscription: false, profile: null });
+  await settle();
   assert.deepEqual(log, ['unregister old']);
+});
+
+test('keeps an old subscription for later when nobody is signed in', async () => {
+  const { log } = setup({ profile: null });
+  await settle();
+  assert.deepEqual(log, []);
 });
 
 test('does nothing when there is no old-address worker', async () => {

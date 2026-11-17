@@ -98,6 +98,12 @@
     await legacy.unregister();
   }
 
+  // Without a subscription the old worker has nothing to hand over, whoever is signed in.
+  async function dropUnusedLegacyWorker() {
+    const legacy = await navigator.serviceWorker.getRegistration(legacyScope);
+    if (legacy?.scope === legacyScope && !await legacy.pushManager.getSubscription()) await legacy.unregister();
+  }
+
   function startLegacyMove() {
     const profile = account.profile;
     if (legacyMove || !supported || !navigator.onLine || profile?.status !== 'active') return legacyMove;
@@ -237,6 +243,7 @@
   window.addEventListener('online', () => { startLegacyMove(); refresh(); });
   window.addEventListener('offline', () => refresh());
   if (supported) navigator.serviceWorker.addEventListener('controllerchange', () => refresh());
+  if (supported) dropUnusedLegacyWorker().catch(() => {});
   startLegacyMove();
   refresh();
 
