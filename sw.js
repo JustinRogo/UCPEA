@@ -1,6 +1,10 @@
 'use strict';
 
-const CACHE_PREFIX = 'ucpea-dashboard-';
+// Cache Storage is shared by the whole origin. The old /Pages/Work/UCPEA/ worker
+// used 'ucpea-dashboard-'; a separate prefix keeps the two from deleting each
+// other's caches while both are installed. Old-address caches are cleared here too.
+const CACHE_PREFIX = 'ucpea-app-';
+const LEGACY_CACHE_PREFIX = 'ucpea-dashboard-';
 const CACHE_NAME = CACHE_PREFIX + 'v49';
 const scope = new URL(self.registration.scope);
 const homeURL = new URL('index.html', scope).href;
@@ -60,7 +64,7 @@ self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     const names = await caches.keys();
     await Promise.all(names
-      .filter(name => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
+      .filter(name => (name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME) || name.startsWith(LEGACY_CACHE_PREFIX))
       .map(name => caches.delete(name)));
     await self.clients.claim();
   })());
