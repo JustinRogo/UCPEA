@@ -1,0 +1,23 @@
+{
+  "name": "ucpea-member-dashboard",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/preview.mjs",
+    "refresh:calendar": "node update-calendar.mjs",
+    "refresh:union-wire": "node update-union-wire.mjs",
+    "test": "node --test tests/ucpea-board-push.test.mjs tests/ucpea-push-permissions.test.mjs tests/ucpea-signup-push.test.mjs tests/ucpea-migration.test.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.118.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.11",
+    "lz-string": "1.5.0",
+    "node-ical": "0.27.3",
+    "sanitize-html": "2.18.1"
+  }
+}

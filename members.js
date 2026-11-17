@@ -3,7 +3,7 @@
 // UCPEA Members view: approvals, the staff FYI list, and member management.
 //
 // What each person sees and can change is decided by the database's row-level
-// security and triggers (Pages/Work/UCPEA/supabase/migrations). This file only
+// security and triggers (supabase/migrations). This file only
 // hides controls that would be refused anyway, so the screen stays honest.
 //   Stewards: pending sign-ups and members in their own areas; can approve.
 //   Staff:    everyone; approve, decline, suspend, and manage areas/stewards.

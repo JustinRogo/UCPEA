@@ -19,7 +19,7 @@ test('board alerts honor posting permissions and send only once to currently eli
         $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
       grant usage on schema auth to anon, authenticated;
     `);
-    const migrations = new URL('../Pages/Work/UCPEA/supabase/migrations/', import.meta.url);
+    const migrations = new URL('../supabase/migrations/', import.meta.url);
     for (const name of [
       '20261113000100_roles_and_profiles.sql',
       '20261113000200_bulletin_board.sql',
@@ -133,7 +133,7 @@ test('board alerts honor posting permissions and send only once to currently eli
 });
 
 test('board notification text is generic and opens the correct post within the dashboard', async () => {
-  const scope = 'https://example.net/Pages/Work/UCPEA/';
+  const scope = 'https://example.net/UCPEA/';
   const handlers = new Map();
   const notifications = [];
   const opened = [];
@@ -148,7 +148,7 @@ test('board notification text is generic and opens the correct post within the d
     },
     addEventListener(event, callback) { handlers.set(event, callback); },
   };
-  const worker = await readFile(new URL('../Pages/Work/UCPEA/sw.js', import.meta.url), 'utf8');
+  const worker = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
   runInNewContext(worker, { self, URL });
   function dispatch(name, event) {
     let completed;

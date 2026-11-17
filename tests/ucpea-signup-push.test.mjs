@@ -19,7 +19,7 @@ test('sign-up alerts go once per pending account to active staff, admins, and st
         $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
       grant usage on schema auth to anon, authenticated;
     `);
-    const migrations = new URL('../Pages/Work/UCPEA/supabase/migrations/', import.meta.url);
+    const migrations = new URL('../supabase/migrations/', import.meta.url);
     for (const name of [
       '20261113000100_roles_and_profiles.sql',
       '20261113000300_push_subscriptions.sql',
@@ -111,7 +111,7 @@ test('sign-up alerts go once per pending account to active staff, admins, and st
 });
 
 test('sign-up notification text is generic and opens the Members view', async () => {
-  const scope = 'https://example.net/Pages/Work/UCPEA/';
+  const scope = 'https://example.net/UCPEA/';
   const handlers = new Map();
   const notifications = [];
   const opened = [];
@@ -126,7 +126,7 @@ test('sign-up notification text is generic and opens the Members view', async ()
     },
     addEventListener(event, callback) { handlers.set(event, callback); },
   };
-  const worker = await readFile(new URL('../Pages/Work/UCPEA/sw.js', import.meta.url), 'utf8');
+  const worker = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
   runInNewContext(worker, { self, URL });
   function dispatch(name, event) {
     let completed;

@@ -5,7 +5,7 @@
 // The Supabase library (~220 KB) only loads when it is needed: when someone
 // opens the Account view, or when this device already has a signed-in session.
 // Visitors who never sign in never download it. The site build copies the
-// library from node_modules into Pages/Updates/vendor/ (scripts/build-site.mjs).
+// library from node_modules into vendor/ (scripts/build.mjs).
 (() => {
   const SUPABASE_URL = 'https://bjfrwucqfurlunhdhlis.supabase.co';
   // Publishable keys are meant to be public; the database's row-level security
@@ -14,7 +14,7 @@
   const SESSION_KEY = 'sb-bjfrwucqfurlunhdhlis-auth-token';
   const PROFILE_KEY = 'ucpea-account-profile';
   const MEMBER_CACHE_PREFIX = 'ucpea-member-';
-  const LIBRARY_URL = new URL('../../Updates/vendor/supabase.js', document.baseURI).href;
+  const LIBRARY_URL = new URL('vendor/supabase.js', document.baseURI).href;
   const RESEND_SECONDS = 60;
 
   const view = document.getElementById('account');

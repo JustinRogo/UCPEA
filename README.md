@@ -2,7 +2,7 @@
 
 The UCPEA Member Dashboard brings together the collective bargaining agreement, union updates, benefits guides, and member tools for the University of Connecticut Professional Employees Association. Approved members can read their Area’s Bulletin Board and opt in to push notifications. Area Stewards, UCPEA staff, and administrators use the same app to publish posts and review sign-ups within their roles.
 
-The dashboard is an independent resource based on public UCPEA information. Confirm deadlines, eligibility, and governing language with UCPEA or the collective bargaining agreement. [Open the dashboard](https://justinrogo.github.io/Pages/Work/UCPEA/index.html) · [Official UCPEA website](https://ucpea.ct.aft.org/)
+The dashboard is an independent resource based on public UCPEA information. Confirm deadlines, eligibility, and governing language with UCPEA or the collective bargaining agreement. [Open the dashboard](https://justinrogo.github.io/UCPEA/) · [Official UCPEA website](https://ucpea.ct.aft.org/)
 
 ## What’s in the dashboard
 
@@ -88,25 +88,36 @@ Use **Install** or your browser’s **Add to Home Screen** option to open the da
 - **Frontend.** The dashboard is a static HTML, CSS, and JavaScript app published through GitHub Pages. Navigation uses shareable URLs such as `index.html?view=board`. The dashboard opens the contract tools and Area Explorer in embedded pages. [Dashboard markup](index.html) · [Routing](app.js) · [Embedded views](tool-views.js)
 - **Accounts and permissions.** Supabase Auth sends email codes. Postgres stores profiles, Area assignments, posts, and subscriptions. Row-level security and database functions enforce access independently of what the interface displays. The contract files are part of the public static build. Sign-in controls whether the history and comparison links appear in navigation. [Profiles and roles](supabase/migrations/20261113000100_roles_and_profiles.sql) · [Board policies](supabase/migrations/20261113000200_bulletin_board.sql)
 - **Flyers and push.** Supabase Storage uses separate public and members-only buckets. The app requests temporary links for protected flyers. Edge Functions check account access and handle test notifications, batched board alerts, and sign-up alerts to stewards and staff. [Backend setup and function deployment](supabase/README.md)
-- **Public sources.** The Pages workflow refreshes the public UCPEA calendar and Union Wire snapshots. When a refresh fails, the build can use the saved snapshot. The Area Explorer uses the published map data and can fall back to the locations bundled in its page. [Calendar refresh](update-calendar.mjs) · [Union Wire refresh](update-union-wire.mjs) · [Pages workflow](../../../.github/workflows/deploy.yml)
+- **Public sources.** The Pages workflow refreshes the public UCPEA calendar and Union Wire snapshots. When a refresh fails, the build can use the saved snapshot. The Area Explorer uses the published map data and can fall back to the locations bundled in its page. [Calendar refresh](update-calendar.mjs) · [Union Wire refresh](update-union-wire.mjs) · [Pages workflow](.github/workflows/deploy.yml)
 - **Offline and device data.** The installable web app caches the dashboard and bundled resources with a service worker. The Board can show its last saved snapshot for the same account when offline. Sign-in, account management, posting, sending alerts, and external resources require a connection. Appearance and board layout preferences stay in the browser. The holiday time tracker saves entries in the browser only when you select **Remember on this browser**. [Manifest](manifest.webmanifest) · [Service worker](sw.js) · [Holiday tracker](member-rights.js)
+
+## Moving from the old address
+
+Until November 2026 the dashboard lived at `https://justinrogo.github.io/Pages/Work/UCPEA/`. The new address is on the same origin, so sign-ins, appearance settings, and notification permission carry over. The old address now forwards every page, view, and link to the same place here.
+
+- **Bookmarks and shared links** keep working through the redirect. Update them when convenient.
+- **Notifications** move on their own. The first time an approved member opens the new address while signed in, the dashboard moves that device’s subscription to the new address and removes the old one. It never asks for permission again. If the browser refuses the silent move, alerts keep arriving through the old address until the member turns on **Show notifications** again. [Subscription move](account-notifications.js)
+- **iPhone and iPad Home Screen apps** must be removed and added again from the new address. A Home Screen icon stays tied to the address it was added from, and notifications on iPhone and iPad only work from the icon. Delete the old icon, open `https://justinrogo.github.io/UCPEA/` in Safari, choose **Share → Add to Home Screen**, open the new icon, then turn on **Show notifications**.
+- **Installed apps on Android and desktop** keep opening, through the redirect, but install the new address and uninstall the old one to get a clean app window.
 
 ## Local development and deployment
 
-Use Node.js 22 or newer. From the repository root, build from the existing feed snapshots and serve the production output locally.
+Use Node.js 22 or newer. Build from the saved feed snapshots and serve the production output locally under `/UCPEA/`, the same path GitHub Pages uses.
 
 ```sh
 npm ci
-npm run build -- --skip-feed
+npm run build
 npm run preview
 ```
 
-Open the [local dashboard](http://127.0.0.1:4391/Pages/Work/UCPEA/index.html). The preview serves `dist/` and uses the Supabase project configured in `account.js` for account and Board operations. Use test accounts or a separate Supabase project for write and notification checks. [Preview server](../../../scripts/preview-site.mjs)
+Open the [local dashboard](http://127.0.0.1:4391/UCPEA/). The preview serves `dist/` and uses the Supabase project configured in `account.js` for account and Board operations. Use test accounts or a separate Supabase project for write and notification checks. The build copies the Supabase browser library from `node_modules` into `vendor/` and leaves the backend source, SQL, Markdown, Node scripts, and tests out of `dist/`. [Build](scripts/build.mjs) · [Preview server](scripts/preview.mjs)
 
-Run the push and permission checks from the repository root.
+Run the push, permission, and subscription-move checks:
 
 ```sh
-node --test tests/ucpea-board-push.test.mjs tests/ucpea-push-permissions.test.mjs tests/ucpea-signup-push.test.mjs
+npm test
 ```
 
-The GitHub Pages workflow publishes the static build from `main` and runs feed refreshes on its configured schedule. Apply Supabase migrations and deploy Edge Functions separately when the backend changes. Update the service worker’s cache version when changing cached dashboard files and list new core assets in its precache manifest. [Pages workflow](../../../.github/workflows/deploy.yml) · [Supabase setup](supabase/README.md) · [Service worker](sw.js)
+Refresh the calendar and Union Wire snapshots with `npm run refresh:calendar` and `npm run refresh:union-wire`.
+
+The GitHub Pages workflow runs the tests, refreshes the feeds, and publishes `dist/` from `main` on every push and every 30 minutes. If a feed refresh fails, the build uses the last saved snapshot. Pull requests run the tests and build without deploying. Apply Supabase migrations and deploy Edge Functions separately when the backend changes. Update the service worker’s cache version when changing cached dashboard files and list new core assets in its precache manifest. [Pages workflow](.github/workflows/deploy.yml) · [Supabase setup](supabase/README.md) · [Service worker](sw.js)

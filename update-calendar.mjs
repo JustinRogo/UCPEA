@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import ical from 'node-ical';
 import lzString from 'lz-string';
 import sanitizeHtml from 'sanitize-html';
-import { calendarTimeZone, civilDate, easternDay, shiftDay } from '../../../v2/src/calendarDates.js';
+import { calendarTimeZone, civilDate, easternDay, shiftDay } from './calendar-dates.mjs';
 
 // Styled Calendar's public embed uses this anonymous feed for the events it displays.
 const source = 'https://embed.styledcalendar.com/api/get-styled-calendar-events-data/?styledCalendarId=BeQlhkDJKGvzX3726Qh8';

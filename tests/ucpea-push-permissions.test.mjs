@@ -17,7 +17,7 @@ test('personal push tests require a current subscription owned by an approved me
       grant usage on schema auth to anon, authenticated;
     `);
 
-    const migrations = new URL('../Pages/Work/UCPEA/supabase/migrations/', import.meta.url);
+    const migrations = new URL('../supabase/migrations/', import.meta.url);
     for (const name of [
       '20261113000100_roles_and_profiles.sql',
       '20261113000300_push_subscriptions.sql',

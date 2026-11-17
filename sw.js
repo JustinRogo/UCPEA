@@ -1,7 +1,7 @@
 'use strict';
 
 const CACHE_PREFIX = 'ucpea-dashboard-';
-const CACHE_NAME = CACHE_PREFIX + 'v48';
+const CACHE_NAME = CACHE_PREFIX + 'v49';
 const scope = new URL(self.registration.scope);
 const homeURL = new URL('index.html', scope).href;
 // How long a request waits for the network before a saved copy is used.
@@ -39,9 +39,9 @@ const offlineURLs = new Set([
   'icons/apple-touch-icon.png',
 ].map(path => new URL(path, scope).href));
 
-// The sign-in library is shared with the Updates page (the site build copies it
-// there). It is cached too, but separately, so a missing copy never breaks the install.
-const supabaseURL = new URL('../../Updates/vendor/supabase.js', scope).href;
+// The sign-in library is copied into vendor/ by the build (scripts/build.mjs).
+// It is cached too, but separately, so a missing copy never breaks the install.
+const supabaseURL = new URL('vendor/supabase.js', scope).href;
 const coreURLs = [...offlineURLs];
 offlineURLs.add(supabaseURL);
 

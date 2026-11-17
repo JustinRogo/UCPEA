@@ -5,7 +5,7 @@
 // Everyone sees published public posts. Signed-in, approved members also see
 // members-only posts for the union-wide board and their own areas. Staff post
 // anywhere; stewards post to their areas. The database's row-level security
-// decides all of this (Pages/Work/UCPEA/supabase/migrations); this file only
+// decides all of this (supabase/migrations); this file only
 // hides controls that would be refused anyway.
 (() => {
   const view = document.getElementById('board');

@@ -15,6 +15,9 @@
   const supported = window.top === window && window.isSecureContext &&
     'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
   const scope = new URL('./', location.href).href;
+  // Until November 2026 the dashboard lived at /Pages/Work/UCPEA/. Devices that
+  // turned on alerts there still hold a subscription under that old scope.
+  const legacyScope = new URL('/Pages/Work/UCPEA/', location.origin).href;
   const isAppleMobile = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
@@ -22,6 +25,7 @@
   let device;
   let pendingAction;
   let signingOut = false;
+  let legacyMove;
 
   function show(message, { enabled = false, ready = false, canRetry = false } = {}) {
     status.textContent = message;
@@ -44,6 +48,64 @@
   async function dashboardRegistration() {
     const registration = await navigator.serviceWorker.getRegistration(scope);
     if (registration?.scope === scope) return registration;
+  }
+
+  function decodeKey(value) {
+    if (!/^[A-Za-z0-9_-]{87}$/.test(value || '')) throw new Error('Missing public key');
+    return Uint8Array.from(atob(value.replace(/-/g, '+').replace(/_/g, '/') + '='), c => c.charCodeAt(0));
+  }
+
+  async function registerSubscription(client, subscription) {
+    const { keys } = subscription.toJSON();
+    const { error } = await client.rpc('register_push_subscription', {
+      p_endpoint: subscription.endpoint,
+      p_p256dh: keys.p256dh,
+      p_auth: keys.auth,
+    }).abortSignal(AbortSignal.timeout(5000));
+    if (error) throw error;
+  }
+
+  // Move alerts from the old address to this one without asking again: the
+  // origin is the same, so the permission already granted still applies. The
+  // old subscription is only removed once the new one is saved, so a failure
+  // leaves the device receiving alerts through the old address.
+  async function moveLegacySubscription(userId) {
+    const legacy = await navigator.serviceWorker.getRegistration(legacyScope);
+    if (!legacy || legacy.scope !== legacyScope) return;
+    const old = await legacy.pushManager.getSubscription();
+    if (old) {
+      if (Notification.permission !== 'granted') return;
+      // On a first visit the new service worker may still be installing.
+      const registration = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise((_, reject) => setTimeout(reject, 10000, new Error('Service worker not ready'))),
+      ]);
+      if (registration.scope !== scope) return;
+      const client = await account.getClient();
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        const { data, error } = await pushFunction(client);
+        if (error) throw error;
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: decodeKey(data?.publicKey),
+        });
+      }
+      if (account.profile?.id !== userId || account.profile?.status !== 'active' || signingOut) return;
+      await registerSubscription(client, subscription);
+      await removeSubscription(client, old, userId);
+    }
+    await legacy.unregister();
+  }
+
+  function startLegacyMove() {
+    const profile = account.profile;
+    if (legacyMove || !supported || !navigator.onLine || profile?.status !== 'active') return legacyMove;
+    legacyMove = moveLegacySubscription(profile.id).catch(error => {
+      console.warn('UCPEA could not move notifications from the old address.', error);
+    });
+    legacyMove.then(() => refresh());
+    return legacyMove;
   }
 
   async function refresh(message) {
@@ -86,6 +148,7 @@
         if (current === generation) show('The dashboard is getting this device ready for notifications.', { enabled, canRetry: true });
         return;
       }
+      await startLegacyMove();
       const client = await account.getClient();
       const subscription = await registration.pushManager.getSubscription();
       let subscriptionId;
@@ -100,8 +163,8 @@
       let publicKey;
       if (!subscriptionId) {
         const { data, error } = await pushFunction(client);
-        if (error || !/^[A-Za-z0-9_-]{87}$/.test(data?.publicKey || '')) throw error || new Error('Missing public key');
-        publicKey = Uint8Array.from(atob(data.publicKey.replace(/-/g, '+').replace(/_/g, '/') + '='), c => c.charCodeAt(0));
+        if (error) throw error;
+        publicKey = decodeKey(data?.publicKey);
       }
       if (current !== generation || account.profile?.id !== profile.id || account.profile?.status !== 'active') return;
       device = { client, registration, subscription, subscriptionId, publicKey, userId: profile.id };
@@ -141,13 +204,7 @@
     if (permission !== 'granted') return;
     const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: publicKey });
     if (signingOut || account.profile?.id !== userId || account.profile?.status !== 'active') return;
-    const { keys } = subscription.toJSON();
-    const { error } = await client.rpc('register_push_subscription', {
-      p_endpoint: subscription.endpoint,
-      p_p256dh: keys.p256dh,
-      p_auth: keys.auth,
-    }).abortSignal(AbortSignal.timeout(5000));
-    if (error) throw error;
+    await registerSubscription(client, subscription);
   }
 
   test.addEventListener('click', () => run(async ({ client, subscriptionId, subscription }) => {
@@ -175,11 +232,12 @@
   retry.addEventListener('click', () => {
     if (retry.getAttribute('aria-disabled') !== 'true') refresh();
   });
-  document.addEventListener('ucpea-account', () => { ++generation; refresh(); });
+  document.addEventListener('ucpea-account', () => { ++generation; startLegacyMove(); refresh(); });
   new MutationObserver(() => refresh()).observe(menu, { attributes: true, attributeFilter: ['hidden'] });
-  window.addEventListener('online', () => refresh());
+  window.addEventListener('online', () => { startLegacyMove(); refresh(); });
   window.addEventListener('offline', () => refresh());
   if (supported) navigator.serviceWorker.addEventListener('controllerchange', () => refresh());
+  startLegacyMove();
   refresh();
 
   window.UCPEANotifications = {
@@ -190,6 +248,7 @@
       const userId = account.profile?.id;
       try {
         await pendingAction;
+        await legacyMove;
         const registration = await dashboardRegistration();
         if (!registration) return;
         const subscription = await registration.pushManager.getSubscription();

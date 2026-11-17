@@ -83,6 +83,11 @@ await supabase.rpc('approve_signup', { p_user: userId, p_area: 12 });  // staff 
 
    Only the SQL editor (or a server using the service_role key) can do this;
    nobody can make themselves an admin from the app.
+5. In **Authentication → URL Configuration**, set **Site URL** to
+   `https://justinrogo.github.io/UCPEA/` and add
+   `https://justinrogo.github.io/UCPEA/**` under **Redirect URLs**. Sign-in emails
+   link back to the dashboard (`emailRedirectTo` in `account.js`), and Supabase
+   only sends people to allowed addresses.
 
 Later, these same files work with the Supabase CLI (`supabase link`, then
 `supabase db push`). That is the easier route when the project moves to a
@@ -99,7 +104,7 @@ UCPEA-owned account.
 
 1. Apply `20261113000300_push_subscriptions.sql` if it has not already been applied, then apply `20261115000100_push_test_rate_limit.sql` to the UCPEA Supabase project.
 2. Generate a Web Push VAPID key pair once with `npx web-push@3.6.7 generate-vapid-keys`. In Supabase **Edge Functions → Secrets**, set `UCPEA_VAPID_PUBLIC_KEY`, `UCPEA_VAPID_PRIVATE_KEY`, and `UCPEA_VAPID_SUBJECT` (a `mailto:` address for the project operator). Keep using the same key pair while these subscriptions are active.
-3. From `Pages/Work/UCPEA`, with the Supabase CLI signed into the UCPEA project, deploy the function:
+3. From the repository root, with the Supabase CLI signed into the UCPEA project, deploy the function:
 
    ```sh
    supabase functions deploy ucpea-push-test --project-ref <ucpea-project-ref> --no-verify-jwt
@@ -111,7 +116,7 @@ UCPEA-owned account.
 ## Deploying Bulletin Board notifications
 
 1. Apply [`20261115000200_board_push.sql`](migrations/20261115000200_board_push.sql) in the UCPEA SQL Editor after the Bulletin Board and push subscription migrations. The new tables enable RLS and the sender RPCs are restricted to the service role.
-2. From `Pages/Work/UCPEA`, deploy the Board function. It uses the three existing `UCPEA_VAPID_*` secrets and verifies the member's access token itself.
+2. From the repository root, deploy the Board function. It uses the three existing `UCPEA_VAPID_*` secrets and verifies the member's access token itself.
 
    ```sh
    supabase functions deploy ucpea-board-push --project-ref <ucpea-project-ref> --use-api --no-verify-jwt
@@ -129,7 +134,7 @@ Staff and admins with notifications turned on get an alert when someone asks to 
 Each account can trigger one alert, ever. At most ten go out per hour across the union, so a burst of fake sign-ups cannot flood staff phones. Requests over the limit still appear under **Waiting for approval**.
 
 1. Apply [`20261117000100_signup_push.sql`](migrations/20261117000100_signup_push.sql) in the UCPEA SQL Editor after the push subscription migration.
-2. From `Pages/Work/UCPEA`, deploy the function. It uses the three existing `UCPEA_VAPID_*` secrets.
+2. From the repository root, deploy the function. It uses the three existing `UCPEA_VAPID_*` secrets.
 
    ```sh
    supabase functions deploy ucpea-signup-push --project-ref <ucpea-project-ref> --use-api --no-verify-jwt
