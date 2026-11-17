@@ -143,3 +143,53 @@ test('sign-up notification text is generic and opens the Members view', async ()
   await dispatch('notificationclick', { notification: { ...alert, close() {} } });
   assert.equal(opened.pop(), scope + 'index.html?view=members');
 });
+
+test('each sign-up alert adds one to the app icon badge and tells open windows', async () => {
+  const scope = 'https://example.net/UCPEA/';
+  const handlers = new Map();
+  const stored = new Map();
+  const badges = [];
+  const messages = [];
+  const self = {
+    registration: { scope, async showNotification() {} },
+    clients: {
+      async matchAll() { return [{ postMessage: message => messages.push(message) }]; },
+    },
+    navigator: { async setAppBadge(count) { badges.push(count); } },
+    caches: {
+      async open(name) {
+        assert.equal(name, 'ucpea-badge');
+        return {
+          async match(key) { return stored.has(key) ? { text: async () => stored.get(key) } : undefined; },
+          async put(key, response) { stored.set(key, await response.text()); },
+        };
+      },
+    },
+    addEventListener(event, callback) { handlers.set(event, callback); },
+  };
+  const worker = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
+  runInNewContext(worker, { self, URL, Response });
+  function dispatch(name, event) {
+    let completed;
+    handlers.get(name)({ ...event, waitUntil(promise) { completed = promise; } });
+    return completed;
+  }
+  const signup = { data: { json: () => ({ type: 'signup' }) } };
+
+  // members.js saved a count of 2 the last time the app checked.
+  stored.set(scope + 'pending-signups', '2');
+  await dispatch('push', signup);
+  await dispatch('push', signup);
+  assert.deepEqual(badges, [3, 4]);
+  assert.equal(stored.get(scope + 'pending-signups'), '4');
+  assert.deepEqual(messages.map(message => ({ ...message })), [{ type: 'ucpea-signup' }, { type: 'ucpea-signup' }]);
+
+  // Other alerts leave the badge alone.
+  await dispatch('push', { data: { json: () => ({ type: 'test' }) } });
+  assert.deepEqual(badges, [3, 4]);
+
+  // A failing badge never blocks the alert.
+  self.caches = { async open() { throw new Error('Storage unavailable'); } };
+  await dispatch('push', signup);
+  assert.deepEqual(badges, [3, 4, undefined]);
+});

@@ -37,6 +37,11 @@
     list: $('members-list'),
     navLink: $('sidebar-members'),
     navCount: $('members-nav-count'),
+    menuBadge: $('menu-toggle-badge'),
+    menuBadgeLabel: $('menu-toggle-badge-label'),
+    homeSignups: $('home-signups'),
+    homeSignupsTitle: $('home-signups-title'),
+    homeSignupsCount: $('home-signups-count'),
   };
 
   const ROLE_NAMES = { member: 'Member', staff: 'UCPEA staff', admin: 'Administrator' };
@@ -52,6 +57,8 @@
     loading: false,
     loadedOnce: false,
     confirmTimer: 0,
+    countCheckedAt: 0,
+    countRequest: 0,
   };
 
   // ---------------------------------------------------------------------------
@@ -68,7 +75,69 @@
   function updateNav(profile) {
     const { canView } = access(profile);
     els.navLink.hidden = !canView;
-    if (!canView) els.navCount.hidden = true;
+    if (!canView) showPendingCount(0);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Sign-ups waiting for approval: badges on the Members link, the phone menu
+  // button, the phone Overview, and the installed app's icon.
+  // ---------------------------------------------------------------------------
+  // The service worker (sw.js) reads the last count from here and adds one for
+  // each sign-up alert, so the icon stays close while the app is closed. The
+  // cache name must not start with the service worker's 'ucpea-app-' prefix,
+  // or each update would delete it.
+  const BADGE_CACHE = 'ucpea-badge';
+  const badgeKey = new URL('pending-signups', new URL('./', location.href)).href;
+
+  function setAppBadge(count) {
+    if (!('setAppBadge' in navigator)) return;
+    // Browsers refuse badges without notification permission (iPhone and iPad) or outside an installed app.
+    (count ? navigator.setAppBadge(count) : navigator.clearAppBadge()).catch(() => {});
+    if ('caches' in window) {
+      caches.open(BADGE_CACHE).then(cache => count
+        ? cache.put(badgeKey, new Response(String(count)))
+        : cache.delete(badgeKey)).catch(() => {});
+    }
+  }
+
+  function showPendingCount(count) {
+    const short = count > 99 ? '99+' : String(count || '');
+    const label = `${count} sign-up${count === 1 ? '' : 's'} waiting for approval`;
+    els.navCount.textContent = short;
+    els.navCount.hidden = !count;
+    els.navLink.title = count ? `Members (${label})` : 'Members';
+    if (count) els.navLink.setAttribute('aria-label', `Members, ${label}`);
+    else els.navLink.removeAttribute('aria-label');
+    els.menuBadge.textContent = short;
+    els.menuBadge.hidden = !count;
+    els.menuBadgeLabel.textContent = count ? label : '';
+    els.homeSignups.hidden = !count;
+    els.homeSignupsTitle.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+    els.homeSignupsCount.textContent = short;
+    setAppBadge(count);
+  }
+
+  // Show the last count saved on this device straight away, before the network answers.
+  async function restoreSavedCount() {
+    try {
+      const saved = await (await caches.open(BADGE_CACHE)).match(badgeKey);
+      const count = Number.parseInt(await saved?.text(), 10);
+      if (count > 0 && !state.countCheckedAt && access(state.me).canView) showPendingCount(count);
+    } catch {
+      // The count arrives from the network instead.
+    }
+  }
+
+  // Ask again when the app comes back into view, at most once a minute, and
+  // straight away when a sign-up alert arrives or the device comes back online.
+  function refreshPendingCount({ force = false } = {}) {
+    if (!access(state.me).canView || document.hidden || !navigator.onLine) return;
+    if (!force && Date.now() - state.countCheckedAt < 60000) return;
+    const editing = state.expanded.size > 0 ||
+      (view.contains(document.activeElement) && document.activeElement.matches('input, select, textarea'));
+    // An open Members view reloads its list, unless someone is part way through a change.
+    if (!view.hidden && state.loadedOnce && !editing) load({ quiet: true });
+    else updateNavCount();
   }
 
   // ---------------------------------------------------------------------------
@@ -150,17 +219,21 @@
     }
   }
 
+  // RLS limits the count the same way as the list: stewards see sign-ups for their own areas.
   async function updateNavCount() {
-    if (!access(state.me).canView) return;
+    const me = state.me;
+    if (!access(me).canView) return;
+    const request = ++state.countRequest;
+    state.countCheckedAt = Date.now();
     try {
       const client = await UCPEAAccount.getClient();
-      const { count, error } = await client.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+      const { count, error } = await client.from('profiles').select('id', { count: 'exact', head: true })
+        .eq('status', 'pending').abortSignal(AbortSignal.timeout(8000));
       if (error) throw error;
-      els.navCount.textContent = String(count || '');
-      els.navCount.hidden = !count;
-      els.navLink.title = count ? `Members (${count} waiting for approval)` : 'Members';
+      if (request === state.countRequest && state.me?.id === me.id && access(state.me).canView) showPendingCount(count || 0);
     } catch {
-      els.navCount.hidden = true;
+      // Keep the last count; the next check tries again.
+      if (request === state.countRequest) state.countCheckedAt = 0;
     }
   }
 
@@ -430,9 +503,9 @@
       : `Showing ${shown.length} of ${others.length}`;
     els.list.replaceChildren(...shown.map(memberRow));
 
-    const navCount = pending.length;
-    els.navCount.textContent = String(navCount || '');
-    els.navCount.hidden = !navCount;
+    ++state.countRequest;
+    state.countCheckedAt = Date.now();
+    showPendingCount(pending.length);
   }
 
   // ---------------------------------------------------------------------------
@@ -597,6 +670,7 @@
   // ---------------------------------------------------------------------------
   document.addEventListener('ucpea-account', event => {
     const profile = event.detail.profile;
+    const previousId = state.me?.id;
     const before = access(state.me);
     state.me = profile;
     updateNav(profile);
@@ -607,7 +681,16 @@
       state.expanded.clear();
     }
     if (!view.hidden && (before.canView !== after.canView || !after.canView)) enter();
-    if (after.canView && !before.canView) updateNavCount();
+    if (after.canView && (!before.canView || previousId !== profile.id)) updateNavCount();
+  });
+
+  document.addEventListener('visibilitychange', () => refreshPendingCount());
+  window.addEventListener('focus', () => refreshPendingCount());
+  window.addEventListener('online', () => refreshPendingCount({ force: true }));
+  setInterval(() => refreshPendingCount(), 5 * 60000);
+  // sw.js passes on each sign-up alert to the open app.
+  navigator.serviceWorker?.addEventListener('message', event => {
+    if (event.data?.type === 'ucpea-signup') refreshPendingCount({ force: true });
   });
 
   new MutationObserver(() => {
@@ -616,6 +699,7 @@
 
   state.me = UCPEAAccount.profile;
   updateNav(state.me);
+  if (access(state.me).canView && 'caches' in window) restoreSavedCount();
   if (!view.hidden) enter();
   else if (access(state.me).canView) {
     if ('requestIdleCallback' in window) requestIdleCallback(updateNavCount, { timeout: 5000 });

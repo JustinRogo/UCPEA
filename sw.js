@@ -5,7 +5,7 @@
 // other's caches while both are installed. Old-address caches are cleared here too.
 const CACHE_PREFIX = 'ucpea-app-';
 const LEGACY_CACHE_PREFIX = 'ucpea-dashboard-';
-const CACHE_NAME = CACHE_PREFIX + 'v49';
+const CACHE_NAME = CACHE_PREFIX + 'v50';
 const scope = new URL(self.registration.scope);
 const homeURL = new URL('index.html', scope).href;
 // How long a request waits for the network before a saved copy is used.
@@ -107,6 +107,33 @@ self.addEventListener('fetch', event => {
   })());
 });
 
+// The installed app's icon shows how many sign-ups are waiting. members.js saves
+// the count it last saw here; each sign-up alert adds one until the app checks
+// again. Kept outside CACHE_PREFIX so activate never deletes it.
+const BADGE_CACHE = 'ucpea-badge';
+const badgeKey = new URL('pending-signups', scope).href;
+
+async function addSignupToBadge() {
+  const badging = self.navigator;
+  if (typeof badging?.setAppBadge !== 'function') return;
+  try {
+    const cache = await self.caches.open(BADGE_CACHE);
+    const saved = await cache.match(badgeKey);
+    const count = (Number.parseInt(await saved?.text(), 10) || 0) + 1;
+    await cache.put(badgeKey, new Response(String(count)));
+    await badging.setAppBadge(count);
+  } catch {
+    // Without a saved count, a plain dot still says something is waiting.
+    await badging.setAppBadge().catch(() => {});
+  }
+}
+
+// An open app refreshes its own count and badges straight away.
+async function tellOpenWindows(message) {
+  const windows = await self.clients.matchAll({ type: 'window' });
+  for (const client of windows) client.postMessage(message);
+}
+
 const postIdPattern = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
 
 self.addEventListener('push', event => {
@@ -123,14 +150,19 @@ self.addEventListener('push', event => {
     signup: 'New member sign-up waiting for approval. Tap to review it.',
     update: 'Open the dashboard to see the latest updates.',
   };
-  event.waitUntil(self.registration.showNotification('UCPEA Member Dashboard', {
+  const shown = self.registration.showNotification('UCPEA Member Dashboard', {
     body: body[type],
     icon: new URL('icons/icon-192.png', scope).href,
     tag: isBoardPost ? `ucpea-board-${payload.postId}` : `ucpea-${type}`,
     // Several sign-ups share one alert, but each new one still sounds.
     renotify: isSignup,
     data: isBoardPost ? { type, postId: payload.postId } : { type },
-  }));
+  });
+  // The badge never holds up or blocks the alert itself.
+  const badge = isSignup
+    ? Promise.allSettled([addSignupToBadge(), tellOpenWindows({ type: 'ucpea-signup' })])
+    : Promise.resolve();
+  event.waitUntil(Promise.all([shown, badge]));
 });
 
 self.addEventListener('notificationclick', event => {
