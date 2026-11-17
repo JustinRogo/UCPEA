@@ -3905,6 +3905,19 @@ body:is(:not([data-account]), [data-account="signed-out"]) [data-signed-in-only]
   line-height: 1.4;
 }
 
+.account-menu__version {
+  margin: 4px 0 0;
+  padding: 8px 10px 4px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.account-menu__version[hidden] {
+  display: none;
+}
+
 .account-menu__support {
   margin-inline-start: 28px;
   font-size: 0.78125rem;

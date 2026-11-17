@@ -113,6 +113,8 @@ npm run preview
 
 Open the [local dashboard](http://127.0.0.1:4391/UCPEA/). The preview serves `dist/` and uses the Supabase project configured in `account.js` for account and Board operations. Use test accounts or a separate Supabase project for write and notification checks. The build copies the Supabase browser library from `node_modules` into `vendor/` and leaves the backend source, SQL, Markdown, Node scripts, and tests out of `dist/`. [Build](scripts/build.mjs) · [Preview server](scripts/preview.mjs)
 
+The build stamps a version into the account menu, below **Sign Out**: `v1.` followed by the number of commits, padded to three digits (58 commits → `v1.058`). It counts every commit reachable from the built one, merge commits included, so it needs the full history; a shallow clone builds without a version. The Pages workflow checks out the full history for this. [Build](scripts/build.mjs)
+
 Run the push, permission, and subscription-move checks:
 
 ```sh
