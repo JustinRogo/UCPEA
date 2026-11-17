@@ -1,0 +1,88 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  schedule:
+    - cron: "17,47 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.event_name == 'pull_request' && github.ref || 'deploy' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install build dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Restore last successful feed snapshots
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            calendar-events.js
+            union-wire-feed.js
+          key: ucpea-feeds-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: ucpea-feeds-
+
+      # Both scripts keep the saved snapshot when the source is unreachable.
+      - name: Refresh UCPEA calendar
+        if: github.event_name != 'pull_request'
+        run: node update-calendar.mjs
+
+      - name: Refresh UCPEA Union Wire feed
+        if: github.event_name != 'pull_request'
+        run: node update-union-wire.mjs
+
+      - name: Save feed snapshots for future builds
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            calendar-events.js
+            union-wire-feed.js
+          key: ucpea-feeds-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Prepare static site
+        run: npm run build
+
+      - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
+
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
+        with:
+          path: ./dist
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
