@@ -54,12 +54,14 @@
   <a class="skip-link" href="#main-content">Skip to dashboard</a>
 
   <header class="site-header">
-    <button class="shell-button menu-toggle" id="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="dashboard-sidebar" hidden>
+    <button class="shell-button menu-toggle" id="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="dashboard-sidebar" aria-describedby="menu-toggle-badge-label" hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path class="menu-icon" d="M4 6h16M4 12h16M4 18h16"/>
         <path class="close-icon" d="m6 6 12 12M6 18 18 6"/>
       </svg>
+      <span class="alert-badge menu-toggle__badge" id="menu-toggle-badge" aria-hidden="true" hidden></span>
     </button>
+    <span id="menu-toggle-badge-label" hidden></span>
     <p class="header-title">
       <a class="header-brand" href="index.html" aria-label="UCPEA Member Dashboard home">
         <img class="brand-mark" src="ucpea-logo.png" width="36" height="36" alt="">
@@ -226,7 +228,7 @@
         <a href="index.html?view=members" id="sidebar-members" title="Members" hidden>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-6 10a6 6 0 0 1 12 0m1-10a3 3 0 1 0 0-6m2 16h3a5 5 0 0 0-4-5"/></svg>
           <span class="sidebar-label">Members</span>
-          <span class="nav-count" id="members-nav-count" hidden></span>
+          <span class="nav-count alert-badge" id="members-nav-count" aria-hidden="true" hidden></span>
         </a>
         <a href="index.html?view=account" id="sidebar-account" title="Sign in">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0"/></svg>
@@ -303,6 +305,16 @@
     <!-- Phones: the Overview opens like an app. What's next, the contract, and the tools members reach for most. -->
     <section class="home-launch" aria-label="Today and member tools">
       <div class="home-today">
+        <a class="home-today__row home-today__row--alert" id="home-signups" href="index.html?view=members" hidden>
+          <span class="home-today__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-6 10a6 6 0 0 1 12 0m1-10a3 3 0 1 0 0-6m2 16h3a5 5 0 0 0-4-5"/></svg>
+          </span>
+          <span class="home-today__text">
+            <small>Members</small>
+            <strong id="home-signups-title">Sign-ups waiting for approval</strong>
+          </span>
+          <span class="alert-badge" id="home-signups-count" aria-hidden="true"></span>
+        </a>
         <a class="home-today__row" id="home-next" href="index.html#calendar">
           <span class="home-today__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M4 5h16v16H4zM8 2v6m8-6v6M4 11h16"/></svg>

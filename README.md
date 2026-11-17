@@ -49,6 +49,7 @@ The dashboard is an independent resource based on public UCPEA information. Conf
 ### Area Stewards
 
 - Open **Members**, then review **Waiting for approval**. You can approve applicants into the Area they requested when you steward that Area. Approval activates the account and adds the Area membership together.
+- A red count shows how many sign-ups are waiting for you: on the **Members** link, on the menu button on phones, at the top of the phone Overview, and on the app's icon when the dashboard is installed and the device supports icon badges. The dashboard checks again when you come back to it, and a sign-up alert adds one to the icon until the app next opens.
 - Use **Members in your areas** to look up the profiles you’re authorized to see. A steward’s account-management action is approving sign-ups for their Areas. Request broader account or assignment changes through staff.
 - With **Show notifications** on, you get an alert when someone confirms their email and asks to join an Area you steward. Tapping it opens **Members**. The alert never shows the applicant’s name or email.
 - Use **New post** on the Bulletin Board to publish to an Area you steward. Your posting permissions cover that Area’s board, including posts by its other stewards.
@@ -56,7 +57,7 @@ The dashboard is an independent resource based on public UCPEA information. Conf
 
 ### UCPEA staff
 
-- Review sign-ups across Areas in **Members**. Choose the appropriate Area when approving. **Decline** puts the account into a paused state, which can be reviewed later.
+- Review sign-ups across Areas in **Members**. The same red count stewards see shows every sign-up waiting across Areas. Choose the appropriate Area when approving. **Decline** puts the account into a paused state, which can be reviewed later.
 - With **Show notifications** on, staff and admin devices get an alert when someone confirms their email and asks to join, whatever Area they chose. Stewards of the requested Area get the same alert. Tapping it opens **Members**. The alert never shows the applicant’s name or email. Each account sends one alert, and no more than ten go out per hour; requests beyond that still appear under **Waiting for approval**. [Sign-up alert setup](supabase/README.md#deploying-sign-up-alerts)
 - Use **Manage** to add or remove Area memberships and switch an Area assignment between **Member** and **Steward**. Staff can appoint others as stewards. Self-appointment as a steward requires admin authority.
 - Pause or reactivate member accounts and mark steward approvals as seen. When reactivating a declined account, review its Area assignments as part of the same workflow.

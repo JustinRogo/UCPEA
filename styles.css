@@ -4256,22 +4256,67 @@ body:is(:not([data-account]), [data-account="signed-out"]) [data-signed-in-only]
   display: none;
 }
 
-.nav-count {
+/* Sign-ups waiting for approval: one red count, wherever it appears.
+   White on this red is above 4.5:1 in both themes. */
+.alert-badge {
   min-width: 22px;
-  margin-left: auto;
   padding: 1px 7px;
   border-radius: 999px;
-  background: var(--ucpea-primary);
-  color: var(--ucpea-primary-ink);
+  background: color-mix(in srgb, var(--ucpea-red) 82%, #000);
+  color: var(--ucpea-white);
   font-size: 0.75rem;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   line-height: 20px;
   text-align: center;
 }
 
-.nav-count[hidden],
-body[data-sidebar="compact"] .nav-count {
+.alert-badge[hidden] {
   display: none;
+}
+
+.nav-count {
+  margin-left: auto;
+}
+
+/* Phone menu button: a small count on the icon's corner, gone while the menu is open. */
+.menu-toggle {
+  position: relative;
+}
+
+.menu-toggle__badge {
+  position: absolute;
+  top: 3px;
+  right: 0;
+  min-width: 18px;
+  padding: 0 5px;
+  font-size: 0.6875rem;
+  line-height: 18px;
+  box-shadow: 0 0 0 2px var(--surface);
+  pointer-events: none;
+}
+
+.menu-toggle[aria-expanded="true"] .menu-toggle__badge {
+  display: none;
+}
+
+@media (width > 800px) {
+  /* Compact sidebar: the count sits on the corner of the Members icon. */
+  [data-sidebar="compact"] #sidebar-members {
+    position: relative;
+  }
+
+  [data-sidebar="compact"] .nav-count {
+    position: absolute;
+    top: 4px;
+    left: calc(50% + 3px);
+    min-width: 18px;
+    margin: 0;
+    padding: 0 5px;
+    font-size: 0.6875rem;
+    line-height: 18px;
+    box-shadow: 0 0 0 2px var(--surface);
+  }
 }
 
 .members-section {
@@ -5636,6 +5681,19 @@ html[data-transition="guide"][data-guide-swap]::view-transition-old(guide-fold-o
 
   .home-today__row + .home-today__row {
     border-top: 1px solid var(--border);
+  }
+
+  .home-today__row[hidden] {
+    display: none;
+  }
+
+  .home-today__row[hidden] + .home-today__row {
+    border-top: 0;
+  }
+
+  /* Stewards, staff, and admins: sign-ups waiting for approval. */
+  .home-today__row--alert {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
   }
 
   .home-today__row:active {
