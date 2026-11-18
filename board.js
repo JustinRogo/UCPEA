@@ -780,6 +780,7 @@
   // ---------------------------------------------------------------------------
   function setMode(mode) {
     if (mode !== 'detail' && els.pushDialog?.open) els.pushDialog.close();
+    if (mode !== 'compose') state.tourComposer = false;
     state.mode = mode;
     els.browse.hidden = mode !== 'browse';
     els.detail.hidden = mode !== 'detail';
@@ -1220,6 +1221,29 @@
   });
 
   els.newPost.addEventListener('click', () => openComposer());
+
+  // The Approvals & posting tour (tutorial.js) opens an empty New post form to
+  // point at the board picker and the alert option, then puts it away. The tour
+  // keeps the page inert, so nothing in the form can be submitted meanwhile.
+  let tourWantsComposer = false;
+  window.UCPEABoardTour = {
+    async showComposer(open) {
+      tourWantsComposer = open;
+      if (!open) {
+        if (state.tourComposer && state.mode === 'compose') {
+          state.editing = null;
+          setMode('browse');
+          renderBrowse();
+        }
+        return;
+      }
+      if (state.mode === 'compose') return; // a post someone was already writing stays as it is
+      if (state.loading || state.loadedFor !== (state.me?.id || null)) await route();
+      if (!tourWantsComposer || state.mode === 'compose' || !access().canPostAnywhere) return;
+      openComposer();
+      state.tourComposer = true;
+    },
+  };
   els.filter.addEventListener('change', filterPosts);
   els.past.addEventListener('change', filterPosts);
   for (const button of els.layoutButtons) {

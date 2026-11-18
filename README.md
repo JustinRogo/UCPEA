@@ -16,7 +16,7 @@ The dashboard is an independent resource based on public UCPEA information. Conf
 | **Committees** | Find the Executive Board and committee rosters, read what each committee does, and open the **Join a committee** interest form. |
 | **Area Explorer** | Search by building, Area, or steward. Use the map and campus filters to identify an Area and find its steward. |
 | **Calendar, Union Wire, and Document Library** | Browse union events and their details, catch up on UCPEA news and member guides, and search or filter links to forms and reference documents. |
-| **Account menu** | Open **Help** for a five-stop walkthrough, switch **Dark mode** on or off, or adjust **Text size** from 80% to 120%. Light mode is the default. Approved accounts can also manage push notifications here. |
+| **Account menu** | Open **Help** for a five-stop walkthrough (it also plays by itself the first time the dashboard is opened on a device), switch **Dark mode** on or off, or adjust **Text size** from 80% to 120%. Light mode is the default. Approved accounts can also manage push notifications here. Stewards, staff, and admins can replay the **Approvals & posting tour**. |
 
 ## Sign in and get approved
 
@@ -48,6 +48,7 @@ The dashboard is an independent resource based on public UCPEA information. Conf
 
 ### Area Stewards
 
+- The first time a steward, staff member, or admin is signed in on a device, the **Approvals & posting tour** opens on its own. It walks through approving sign-ups in **Members**, starting a **New post**, choosing a board, sending a push notification, and turning on alerts. Staff and admins also see **Approved by stewards**. Replay it from the account menu.
 - Open **Members**, then review **Waiting for approval**. You can approve applicants into the Area they requested when you steward that Area. Approval activates the account and adds the Area membership together.
 - A red count shows how many sign-ups are waiting for you: on the **Members** link, on the menu button on phones, at the top of the phone Overview, and on the app's icon when the dashboard is installed and the device supports icon badges. The dashboard checks again when you come back to it, and a sign-up alert adds one to the icon until the app next opens.
 - Use **Members in your areas** to look up the profiles you’re authorized to see. A steward’s account-management action is approving sign-ups for their Areas. Request broader account or assignment changes through staff.

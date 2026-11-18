@@ -5,7 +5,7 @@
 // other's caches while both are installed. Old-address caches are cleared here too.
 const CACHE_PREFIX = 'ucpea-app-';
 const LEGACY_CACHE_PREFIX = 'ucpea-dashboard-';
-const CACHE_NAME = CACHE_PREFIX + 'v50';
+const CACHE_NAME = CACHE_PREFIX + 'v51';
 const scope = new URL(self.registration.scope);
 const homeURL = new URL('index.html', scope).href;
 // How long a request waits for the network before a saved copy is used.
