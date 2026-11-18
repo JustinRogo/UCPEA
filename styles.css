@@ -3925,8 +3925,13 @@ body:is(:not([data-account]), [data-account="signed-out"]) [data-signed-in-only]
   text-underline-offset: .16em;
 }
 
-.account-menu__support[hidden] {
+.account-menu__support[hidden],
+.account-menu__item[hidden] {
   display: none;
+}
+
+:root[data-tutorial] body {
+  padding-bottom: max(var(--dock-height, 0px), var(--tutorial-room, 0px));
 }
 
 .tutorial-spotlight {

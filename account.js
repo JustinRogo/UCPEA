@@ -242,6 +242,7 @@
 
   els.menuView?.addEventListener('click', () => setMenuOpen(false));
   $('account-menu-tutorial')?.addEventListener('click', () => setMenuOpen(false));
+  $('account-menu-manager-tour')?.addEventListener('click', () => setMenuOpen(false));
 
   els.menuSignOut?.addEventListener('click', async () => {
     setMenuOpen(false);
