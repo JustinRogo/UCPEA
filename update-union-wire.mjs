@@ -8,7 +8,7 @@ const USER_AGENT = 'justinrogo.github.io UCPEA Union Wire feed/1.0';
 const PAGE_COUNT = 3;
 const DATE_CONCURRENCY = 5;
 
-function decodeEntities(value = '') {
+export function decodeEntities(value = '') {
   const named = {
     amp: '&',
     apos: "'",
@@ -32,7 +32,7 @@ function decodeEntities(value = '') {
     .trim();
 }
 
-function textOnly(value = '') {
+export function textOnly(value = '') {
   return decodeEntities(
     value
       .replace(/<br\s*\/?>/gi, ' ')
