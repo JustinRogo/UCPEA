@@ -5,8 +5,9 @@
     "build": "node scripts/build.mjs",
     "preview": "node scripts/preview.mjs",
     "refresh:calendar": "node update-calendar.mjs",
+    "refresh:committees": "node update-committees.mjs",
     "refresh:union-wire": "node update-union-wire.mjs",
-    "test": "node --test tests/ucpea-board-push.test.mjs tests/ucpea-push-permissions.test.mjs tests/ucpea-signup-push.test.mjs tests/ucpea-migration.test.mjs"
+    "test": "node --test tests/ucpea-committees.test.mjs tests/ucpea-board-push.test.mjs tests/ucpea-push-permissions.test.mjs tests/ucpea-signup-push.test.mjs tests/ucpea-migration.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0"

@@ -42,11 +42,12 @@ jobs:
         with:
           path: |
             calendar-events.js
+            committees-feed.js
             union-wire-feed.js
           key: ucpea-feeds-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: ucpea-feeds-
 
-      # Both scripts keep the saved snapshot when the source is unreachable.
+      # Each script keeps the saved snapshot when the source is unreachable.
       - name: Refresh UCPEA calendar
         if: github.event_name != 'pull_request'
         run: node update-calendar.mjs
@@ -55,12 +56,17 @@ jobs:
         if: github.event_name != 'pull_request'
         run: node update-union-wire.mjs
 
+      - name: Refresh UCPEA committees and Executive Board
+        if: github.event_name != 'pull_request'
+        run: node update-committees.mjs
+
       - name: Save feed snapshots for future builds
         if: github.event_name != 'pull_request'
         uses: actions/cache/save@v4
         with:
           path: |
             calendar-events.js
+            committees-feed.js
             union-wire-feed.js
           key: ucpea-feeds-${{ github.run_id }}-${{ github.run_attempt }}
 
